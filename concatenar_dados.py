@@ -1,9 +1,10 @@
 import pandas as pd
 import os
+import time
 
 # Caminhos dos arquivos de entrada
-arquivo_cartao = os.path.join(os.getcwd(), 'dados', 'nu', 'extrato_nu_cartao.xlsx')
-arquivo_conta = os.path.join(os.getcwd(), 'dados', 'nu', 'extrato_nu_conta.xlsx')
+arquivo_cartao = os.path.join(os.getcwd(), 'dados', 'nubank', 'cartao', 'extrato_nu_cartao.xlsx')
+arquivo_conta = os.path.join(os.getcwd(), 'dados', 'nubank', 'conta', 'extrato_nu_conta.xlsx')
 
 # Caminho do arquivo de saída
 arquivo_consolidado = os.path.join(os.getcwd(), 'dados.xlsx')
@@ -18,10 +19,6 @@ if not os.path.exists(arquivo_conta):
 df_cartao = pd.read_excel(arquivo_cartao)
 df_conta = pd.read_excel(arquivo_conta)
 
-# Adiciona colunas de identificação
-df_cartao['Origem'] = 'Cartão'
-df_conta['Origem'] = 'Conta'
-
 # Combina os dois DataFrames
 df_consolidado = pd.concat([df_cartao, df_conta], ignore_index=True)
 
@@ -33,4 +30,8 @@ df_consolidado = df_consolidado.sort_values(by='Data')
 df_consolidado.to_excel(arquivo_consolidado, index=False, sheet_name='Extrato')
 
 print(f"✅ Arquivo consolidado gerado: {arquivo_consolidado}")
+
+time.sleep(5) 
+
+
 

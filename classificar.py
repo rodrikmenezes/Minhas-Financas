@@ -6,24 +6,33 @@ from sklearn.naive_bayes import MultinomialNB
 
 # Categorias para classificação
 CATEGORIAS = [
+    "Financiamento Caixa",
+    "Aluguel",
     "Moradia",
+    "Academia",
+    "Supermercado",
+    "Restaurante",
     "Alimentação",
     "Transporte",
+    "Combustível",
+    "Utencílios",
+    "Farmácia",
+    "Seviços",
+    "Assinaturas",
     "Saúde",
+    "Viagem",
     "Educação",
-    "Lazer e Entretenimento",
+    "Lazer",
     "Vestuário",
-    "Despesas com Filhos",
-    "Despesas com Animais de Estimação",
     "Despesas Financeiras",
     "Impostos e Taxas",
-    "Doações e Presentes",
-    "Reserva e Investimentos"
+    "Presentes",
+    "Investimentos"
 ]
 
 # Caminhos dos arquivos de entrada
-arquivo_cartao = os.path.join(os.getcwd(), 'dados', 'nu', 'extrato_nu_cartao.xlsx')
-arquivo_conta = os.path.join(os.getcwd(), 'dados', 'nu', 'extrato_nu_conta.xlsx')
+arquivo_cartao = os.path.join(os.getcwd(), 'dados', 'nubank', 'cartao', 'extrato_nu_cartao.xlsx')
+arquivo_conta = os.path.join(os.getcwd(), 'dados', 'nubank', 'conta', 'extrato_nu_conta.xlsx')
 
 # Caminho do arquivo de saída
 arquivo_consolidado = os.path.join(os.getcwd(), 'dados.xlsx')

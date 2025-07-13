@@ -14,7 +14,8 @@ pasta_pdf = os.getcwd()
 arquivo_saida = os.path.join(pasta_pdf, 'extrato_nu_cartao.xlsx')
 
 # Expressão regular ajustada
-padrao_linha = re.compile(r'^(\d{2})\s+([A-Z]{3})\s+(.+?)\s+(\d+,\d{2})$')
+padrao_linha = re.compile(r'^(\d{2})\s+([A-Z]{3})\s+(.+?)\s+([\d.,\\s]+)$')
+
 
 def extrair_dados_pdf(caminho_pdf, competencia, ano):
     dados = []
@@ -54,14 +55,23 @@ def extrair_dados_pdf(caminho_pdf, competencia, ano):
                     valor_float = float(valor.replace('.', '').replace(',', '.'))
 
                     descricao = descricao.strip()
-
+                    
                     # Tratamento de receitas
-                    receita_keywords = ['Estorno de', 'Crédito de Confiança de', 'Pagamento recebido', 'Transferência recebida']
+                    receita_keywords = [
+                        
+                        'Pagamento recebido', 
+                        'Pagamento em',
+                        'Transferência recebida'
+                        
+                        ]
+                    
                     tipo = 'Receita' if any(descricao.startswith(k) for k in receita_keywords) else 'Despesa'
 
                     dados.append({
                         'Data': data_formatada,
                         'Competência': competencia,
+                        'Banco': 'Nubank',
+                        'Origem': 'Cartão de Crédito',
                         'Descrição': descricao,
                         'Receita/Despesa': tipo,
                         'Valor': valor_float
@@ -93,13 +103,14 @@ def main():
             competencia = f'{ano}-{mes}'
 
             if competencia in competencias_existentes:
-                print(f'Ignorado (já importado): {arquivo}')
+                print(f'Já Importado: {arquivo}')
+                time.sleep(0.05)
                 continue
 
             caminho = os.path.join(pasta_pdf, arquivo)
             dados_pdf = extrair_dados_pdf(caminho, competencia, ano)
             todos_dados.extend(dados_pdf)
-            print(f'Processado: {arquivo}')
+            print(f'Processando: {arquivo}')
 
     if not todos_dados:
         print('Nenhum novo dado foi importado.')
@@ -113,14 +124,14 @@ def main():
     else:
         df_final = df_novos
 
-    # Converte todos os valores para absolutos (positivos)
+    # Converte todos os valores para absolutos, exceto estornos
     df_final['Valor'] = df_final['Valor'].abs()
-
-    # Converte a coluna 'Data' para o tipo datetime
-    df_final['Data'] = pd.to_datetime(df_final['Data'], format='%d/%m/%Y').dt.date
+    
+    # Tratamento de estornos e outros ajustes
+    df_final['Valor'] = df_final.apply(lambda row: -row['Valor'] if 'Estorno de' in row['Descrição'] else row['Valor'], axis=1)  
+    df_final['Valor'] = df_final.apply(lambda row: -row['Valor'] if row['Descrição'].startswith('Crédito de ') else row['Valor'], axis=1)  
 
     # Ordena e salva
-    df_final = df_final.sort_values(by='Data')
     df_final.to_excel(arquivo_saida, index=False, sheet_name='Extrato')
     print(f'Dados salvos em: {arquivo_saida}')
     print(f'Total de registros no arquivo: {len(df_final)}')
@@ -129,4 +140,3 @@ def main():
 if __name__ == '__main__':
     main()
     time.sleep(10)
-    
