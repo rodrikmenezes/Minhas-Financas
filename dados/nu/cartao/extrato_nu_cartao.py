@@ -10,8 +10,8 @@ import time
 logging.getLogger('pdfminer').setLevel(logging.ERROR)
 
 # Diretórios e arquivo de saída
-pasta_pdf = os.path.join(os.getcwd(), 'cartao')
-arquivo_saida = os.path.join(os.getcwd(), 'extrato_nu_cartao.xlsx')
+pasta_pdf = os.getcwd()
+arquivo_saida = os.path.join(pasta_pdf, 'extrato_nu_cartao.xlsx')
 
 # Expressão regular ajustada
 padrao_linha = re.compile(r'^(\d{2})\s+([A-Z]{3})\s+(.+?)\s+(\d+,\d{2})$')
@@ -55,12 +55,9 @@ def extrair_dados_pdf(caminho_pdf, competencia, ano):
 
                     descricao = descricao.strip()
 
-                    # Define Receita/Despesa com base na descrição
-                    if descricao.startswith('Estorno de') or descricao.startswith('Crédito de Confiança de'):
-                        tipo = 'Receita'
-                        valor_float = -abs(valor_float)  # valor negativo para receita, será convertido depois
-                    else:
-                        tipo = 'Despesa'
+                    # Tratamento de receitas
+                    receita_keywords = ['Estorno de', 'Crédito de Confiança de', 'Pagamento recebido', 'Transferência recebida']
+                    tipo = 'Receita' if any(descricao.startswith(k) for k in receita_keywords) else 'Despesa'
 
                     dados.append({
                         'Data': data_formatada,
@@ -73,6 +70,7 @@ def extrair_dados_pdf(caminho_pdf, competencia, ano):
 
 # Execução principal
 def main():
+    
     # Carrega dados existentes
     if os.path.exists(arquivo_saida):
         df_existente = pd.read_excel(arquivo_saida)
@@ -84,26 +82,27 @@ def main():
     todos_dados = []
 
     for arquivo in os.listdir(pasta_pdf):
+        
         if arquivo.endswith('.pdf') and arquivo.startswith('Nubank_'):
             match = re.search(r'Nubank_(\d{4})[_-](\d{2})', arquivo)
             if not match:
-                print(f'❌ Nome de arquivo inesperado: {arquivo}')
+                print(f'Nome de arquivo inesperado: {arquivo}')
                 continue
 
             ano, mes = match.groups()
             competencia = f'{ano}-{mes}'
 
             if competencia in competencias_existentes:
-                print(f'⏩ Ignorado (já importado): {arquivo}')
+                print(f'Ignorado (já importado): {arquivo}')
                 continue
 
             caminho = os.path.join(pasta_pdf, arquivo)
             dados_pdf = extrair_dados_pdf(caminho, competencia, ano)
             todos_dados.extend(dados_pdf)
-            print(f'✅ Processado: {arquivo}')
+            print(f'Processado: {arquivo}')
 
     if not todos_dados:
-        print('⚠️ Nenhum novo dado foi importado.')
+        print('Nenhum novo dado foi importado.')
         return
 
     df_novos = pd.DataFrame(todos_dados)
@@ -117,6 +116,9 @@ def main():
     # Converte todos os valores para absolutos (positivos)
     df_final['Valor'] = df_final['Valor'].abs()
 
+    # Converte a coluna 'Data' para o tipo datetime
+    df_final['Data'] = pd.to_datetime(df_final['Data'], format='%d/%m/%Y').dt.date
+
     # Ordena e salva
     df_final = df_final.sort_values(by='Data')
     df_final.to_excel(arquivo_saida, index=False, sheet_name='Extrato')
@@ -126,4 +128,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    time.sleep(5)
+    time.sleep(10)
+    

@@ -3,8 +3,10 @@ import pandas as pd
 import time
 
 # Diretório da pasta onde estão os CSVs
-pasta_csv = os.path.join(os.getcwd(), 'conta')
-arquivo_saida = os.path.join(os.getcwd(), 'extrato_nu_conta.xlsx')
+pasta_csv = os.getcwd()
+arquivo_saida = os.path.join(pasta_csv, 'extrato_nu_conta.xlsx')
+# pasta_csv = r'C:\Users\rodri\OneDrive\Documentos\GitHub\Minhas-Finanças\dados\nu\conta'
+# arquivo_saida = r'C:\Users\rodri\OneDrive\Documentos\GitHub\Minhas-Finanças\dados\nu\conta\extrato_nu_conta.xlsx'
 
 # Função para ler e padronizar um CSV do Nubank
 def ler_csv_nubank(caminho_csv):
@@ -37,11 +39,11 @@ def ler_csv_nubank(caminho_csv):
 
     return df
 
-# ▶️ Execução principal
+# Execução principal
 def main():
     todos_csvs = [os.path.join(pasta_csv, f) for f in os.listdir(pasta_csv) if f.endswith('.csv')]
     if not todos_csvs:
-        print('⚠️ Nenhum arquivo CSV encontrado na pasta.')
+        print('Nenhum arquivo CSV encontrado na pasta.')
         return
 
     # Concatena todos os arquivos CSV
@@ -54,7 +56,7 @@ def main():
             print(f"Erro ao processar {arquivo}: {e}")
     
     if not dfs:
-        print("⚠️ Nenhum dado válido foi extraído dos arquivos.")
+        print("Nenhum dado válido foi extraído dos arquivos.")
         return
 
     df_novos = pd.concat(dfs, ignore_index=True)
@@ -77,7 +79,7 @@ def main():
         df_novos_filtrado = df_novos
 
     if df_novos_filtrado.empty:
-        print('⚠️ Nenhum novo dado foi importado.')
+        print('Nenhum novo dado foi importado.')
         return
 
     # Junta com os dados antigos
@@ -88,14 +90,17 @@ def main():
 
     # Converte todos os valores para absolutos (positivos)
     df_final['Valor'] = df_final['Valor'].abs()
+    
+    # Converte a coluna 'Data' para o tipo datetime
+    df_final['Data'] = pd.to_datetime(df_final['Data'], format='%d/%m/%Y').dt.date
 
     # Reordena e salva
     df_final = df_final.sort_values(by='Data')
     df_final.to_excel(arquivo_saida, index=False, sheet_name='Extrato')
-    print(f'✅ Arquivo atualizado: {arquivo_saida}')
-    print(f'📄 Total de registros no arquivo: {len(df_final)}')
-    print(f'🆕 Novos registros adicionados: {len(df_novos_filtrado)}')
+    print(f'Arquivo atualizado: {arquivo_saida}')
+    print(f'Total de registros no arquivo: {len(df_final)}')
+    print(f'Novos registros adicionados: {len(df_novos_filtrado)}')
 
 if __name__ == '__main__':
     main()
-    time.sleep(5)
+    time.sleep(10)
