@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
+import openpyxl
 
 # Configurações do Streamlit
 st.set_page_config(
@@ -23,7 +24,7 @@ st.set_page_config(
 # Carregar dados
 @st.cache_data
 def carregar_dados():
-    df = pd.read_excel('dados.xlsx')
+    df = pd.read_excel('dados.xlsx', engine='openpyxl')
     df['Data'] = pd.to_datetime(df['Data'])
     df['AnoMes'] = df['Data'].dt.to_period('M').astype(str)
     return df
