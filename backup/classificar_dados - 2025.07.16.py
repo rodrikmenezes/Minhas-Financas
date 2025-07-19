@@ -78,7 +78,6 @@ Se alguma descrição conter a palavra apontada no exemplo, classifique-a na cat
 
 """
 
-
 # Classificar as transações
 prompt = ChatPromptTemplate.from_template(template=instrucao)
 chat = ChatGroq(model="llama-3.1-8b-instant")
