@@ -2,3 +2,6 @@
 # Pastas
 dados/
 backup/
+
+# Arquivos
+.env
