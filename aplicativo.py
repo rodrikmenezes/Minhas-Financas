@@ -3,23 +3,20 @@
 
 # Carregar de bibliotecas
 import streamlit as st
-import pandas as pd
 from streamlit_option_menu import option_menu
-import matplotlib.pyplot as plt
+import pandas as pd
+import altair as alt
 import openpyxl
+
 
 # Configurações do Streamlit
 st.set_page_config(
     page_title='Dashboard Financeiro',
     page_icon='💲',
     layout='wide',
-    initial_sidebar_state='expanded',
-    menu_items={
-        'Get Help': 'http://www.meusite.com.br',
-        'Report a bug': "http://www.meuoutrosite.com.br",
-        'About': "Esse app foi desenvolvido no nosso Curso."
-    }
+    initial_sidebar_state='expanded'
 )
+
 
 # Carregar dados
 @st.cache_data
@@ -29,65 +26,66 @@ def carregar_dados():
     df['AnoMes'] = df['Data'].dt.to_period('M').astype(str)
     return df
 
-df = carregar_dados()
+dados = carregar_dados()
 
 
 # Sidebar de navegação
 with st.sidebar:
 
     menu = option_menu(
-        menu_title = 'Menu Principal',
-        options=['Resumo', 'Saldo Mensal', 'Status','D.board','Suporte'],
-        icons=['house','basket', 'android2','bar-chart', 'bell'],
+        menu_title = 'Opções',
         menu_icon='cast',
-        default_index=0,
+        options=['Resumo', 'Saldo', 'Status'],
+        icons=['house','basket', 'bar-chart'],
         orientation='vertical',
         styles={
         'container': {'padding': '0!important', 'background-color': '#3b4733'},
-        'icon': {'color': 'orange', 'font-size': '20px'},
+        'icon': {'color': 'orange', 'font-size': '16px'},
         'nav-link-selected': {'background-color': 'green'},
         'nav-link': {
-            'font-size': '18px',
+            'font-size': '16px',
             'text-align': 'left',
             'margin': '1px',
             '--hover-color': '#f8f4ec',
+            },
         },
-    },
     )
 
 
 # Página: Resumo
 if menu == 'Resumo':
+    
+    # Print título da página
     st.title('Resumo Financeiro')
 
     # Sidebar secundário
-    # competencia = st.sidebar.selectbox('Selecione a competência', sorted(df['Competência'].unique()))
-    competencia = st.selectbox('Selecione a competência', sorted(df['Competência'].unique()))
+    competencia = st.selectbox('Selecione a competência', sorted(dados['Competência'].unique()))
     
-    # Filtro de dados
-    df_filtrado = df[(df['Competência'] == competencia) & (df['Origem'] == 'Conta Corrente')]
+    # Filtro de dados da conta corrente por competência
+    dados_1_ = dados[(dados['Competência'] == competencia) & (dados['Origem'] == 'Conta Corrente')]
 
     # Métricas
-    receitas = df_filtrado[df_filtrado['Receita/Despesa'] == 'Receita']['Valor'].sum()
-    despesas = df_filtrado[df_filtrado['Receita/Despesa'] == 'Despesa']['Valor'].sum()
+    receitas = dados_1_[dados_1_['Receita/Despesa'] == 'Receita']['Valor'].sum()
+    despesas = dados_1_[dados_1_['Receita/Despesa'] == 'Despesa']['Valor'].sum()
     saldo = receitas - despesas
     
     # Print de métricas
-    # st.metric('Receitas', f'R$ {receitas:,.2f}')
-    # st.metric('Despesas', f'R$ {despesas:,.2f}')
-    # st.metric('Saldo', f'R$ {saldo:,.2f}')
     st.markdown(f'## Competência: *{competencia}*')
     col1, col2, col3 = st.columns(3, gap='large')
     col1.metric('Receitas', f'R$ {receitas:,.2f}')
     col2.metric('Despesas', f'R$ {despesas:,.2f}')
     col3.metric('Saldo', f'R$ {saldo:,.2f}')
 
-    # Gráfico
-    fig, ax = plt.subplots()
-    ax.bar(['Receitas', 'Despesas', 'Saldo'], [receitas, despesas, saldo], color=['green', 'red', 'blue'])
-    ax.set_ylabel('Valor (R$)')
-    st.pyplot(fig)
-    # st.plotly_chart(fig, use_container_width=True)
+    # Print Gráfico
+    tabela = pd.DataFrame({
+        'Receita/Despesa': ['Receitas', 'Despesas', 'Saldo'],
+        'Valor': [receitas, despesas, saldo]
+    })
+    grafico = alt.Chart(tabela).mark_bar().encode(
+        x = alt.X('Receita/Despesa', title='Tipo'),
+        y = alt.Y('Valor', title='Valor (R$)')
+    )
+    st.altair_chart(grafico)
 
 
 
