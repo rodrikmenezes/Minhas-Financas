@@ -35,8 +35,8 @@ with st.sidebar:
     menu = option_menu(
         menu_title = 'Opções',
         menu_icon='cast',
-        options=['Resumo', 'Saldo', 'Status'],
-        icons=['house','basket', 'bar-chart'],
+        options=['Conta Corrente', 'Cartão de Crédito', 'Despesas Mensais'],
+        icons=['currency-dollar','credit-card', 'calendar-fill'],
         orientation='vertical',
         styles={
         'container': {'padding': '0!important', 'background-color': '#3b4733'},
@@ -52,45 +52,85 @@ with st.sidebar:
     )
 
 
-# Página: Resumo
-if menu == 'Resumo':
+### Página  Conta Corrente ###
+if menu == 'Conta Corrente':
     
     # Print título da página
-    st.title('Resumo Financeiro')
+    st.title('Conta Corrente')
 
-    # Sidebar secundário
-    competencia = st.selectbox('Selecione a competência', sorted(dados['Competência'].unique()))
+    # Selecao competencia
+    competencia_mes_atual = st.selectbox('Competência', sorted(dados['Competência'].unique()))
+    competencia_mes_anterior = competencia_mes_atual[:-2] + str(int(competencia_mes_atual[-2:]) - 1).zfill(2)
+    if competencia_mes_anterior == '2019-11': competencia_mes_anterior = '2019-12'
     
     # Filtro de dados da conta corrente por competência
-    dados_1_ = dados[(dados['Competência'] == competencia) & (dados['Origem'] == 'Conta Corrente')]
+    df_mes_atual = dados[(dados['Competência'] == competencia_mes_atual) & (dados['Origem'] == 'Conta Corrente')]
+    df_mes_anterior = dados[(dados['Competência'] == competencia_mes_anterior) & (dados['Origem'] == 'Conta Corrente')]
 
     # Métricas
-    receitas = dados_1_[dados_1_['Receita/Despesa'] == 'Receita']['Valor'].sum()
-    despesas = dados_1_[dados_1_['Receita/Despesa'] == 'Despesa']['Valor'].sum()
-    saldo = receitas - despesas
+    receita_mes_atual = df_mes_atual[df_mes_atual['Receita/Despesa'] == 'Receita']['Valor'].sum()
+    receita_mes_anterior = df_mes_anterior[df_mes_anterior['Receita/Despesa'] == 'Receita']['Valor'].sum()
+    despesa_mes_atual = df_mes_atual[df_mes_atual['Receita/Despesa'] == 'Despesa']['Valor'].sum()
+    despesa_mes_anterior = df_mes_anterior[df_mes_anterior['Receita/Despesa'] == 'Despesa']['Valor'].sum()
+    saldo_mes_atual = receita_mes_atual - despesa_mes_atual
+    saldo_mes_anterior = receita_mes_anterior - despesa_mes_anterior
     
     # Print de métricas
-    st.markdown(f'## Competência: *{competencia}*')
     col1, col2, col3 = st.columns(3, gap='large')
-    col1.metric('Receitas', f'R$ {receitas:,.2f}')
-    col2.metric('Despesas', f'R$ {despesas:,.2f}')
-    col3.metric('Saldo', f'R$ {saldo:,.2f}')
+    col1.metric('Receitas', f'R$ {receita_mes_atual:.2f}', delta=round(receita_mes_anterior, 2), border=True)
+    col2.metric('Despesas', f'R$ {despesa_mes_anterior:.2f}', delta=round(despesa_mes_anterior, 2), border=True)
+    col3.metric('Saldo', f'R$ {saldo_mes_atual:.2f}', delta=round(saldo_mes_anterior, 2), border=True)
 
     # Print Gráfico
     tabela = pd.DataFrame({
         'Receita/Despesa': ['Receitas', 'Despesas', 'Saldo'],
-        'Valor': [receitas, despesas, saldo]
+        'Valor': [receita_mes_atual, despesa_mes_atual, saldo_mes_atual]
     })
     grafico = alt.Chart(tabela).mark_bar().encode(
-        x = alt.X('Receita/Despesa', title='Tipo'),
+        x = alt.X('Receita/Despesa', title='', 
+                  axis=alt.Axis(labelAngle=0), 
+                  scale=alt.Scale(paddingInner=0.5)
+                  ),
         y = alt.Y('Valor', title='Valor (R$)')
     )
     st.altair_chart(grafico)
 
 
 
+### Página  Conta Corrente ###
+if menu == 'Cartão de Crédito':
+    
+    # Print título da página
+    st.title('Cartão de Crédito')
 
+    # Selecao competencia
+    competencia_mes_atual = st.selectbox('Competência', sorted(dados['Competência'].unique()))
+    competencia_mes_anterior = competencia_mes_atual[:-2] + str(int(competencia_mes_atual[-2:]) - 1).zfill(2)
+    if competencia_mes_anterior == '2019-11': competencia_mes_anterior = '2019-12'
+    
+    # Filtro de dados do cartão de crédito por competência
+    df_mes_atual = dados[(dados['Competência'] == competencia_mes_atual) & (dados['Origem'] == 'Cartão de Crédito')]
+    df_mes_anterior = dados[(dados['Competência'] == competencia_mes_anterior) & (dados['Origem'] == 'Cartão de Crédito')]
 
+    # Métricas
+    receita_mes_atual = df_mes_atual[df_mes_atual['Receita/Despesa'] == 'Receita']['Valor'].sum()
+    receita_mes_anterior = df_mes_anterior[df_mes_anterior['Receita/Despesa'] == 'Receita']['Valor'].sum()
+    despesa_mes_atual = df_mes_atual[df_mes_atual['Receita/Despesa'] == 'Despesa']['Valor'].sum()
+    despesa_mes_anterior = df_mes_anterior[df_mes_anterior['Receita/Despesa'] == 'Despesa']['Valor'].sum()
+    saldo_mes_atual = receita_mes_atual - despesa_mes_atual
+    saldo_mes_anterior = receita_mes_anterior - despesa_mes_anterior
+    
+    # Print de métricas
+    col1, col2, col3 = st.columns(3, gap='large')
+    col1.metric('Receitas', f'R$ {receita_mes_atual:.2f}', delta=round(receita_mes_anterior, 2), border=True)
+    col2.metric('Despesas', f'R$ {despesa_mes_anterior:.2f}', delta=round(despesa_mes_anterior, 2), border=True)
+    col3.metric('Saldo', f'R$ {saldo_mes_atual:.2f}', delta=round(saldo_mes_anterior, 2), border=True)
+
+    # Print Gráfico
+    tabela = pd.DataFrame({
+        'Receita/Despesa': ['Receitas', 'Despesas', 'Saldo'],
+        'Valor': [receita_mes_atual, despesa_mes_atual, saldo_mes_atual]
+    })
 
 
 
